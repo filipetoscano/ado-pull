@@ -48,9 +48,6 @@ bash cicd/checks.sh
 dotnet build   -c Release --no-restore -p:Version=${VERSION}
 dotnet test    -c Release --no-restore --no-build -p:Version=${VERSION}
 
-rm -rf tmp/win-x64
-dotnet publish -c Release --runtime=win-x64 --self-contained tools/Lefty.Schematron.Gui/Lefty.Schematron.Gui.csproj -p:Version=${VERSION} -o tmp/win-x64
-
 
 #
 # Package
@@ -59,9 +56,6 @@ dotnet publish -c Release --runtime=win-x64 --self-contained tools/Lefty.Schemat
 mkdir -p nupkg
 rm -f nupkg/*.*
 
-dotnet pack    -c Release --no-restore --no-build src/Lefty.Schematron       -o nupkg -p:Version=${VERSION}
-dotnet pack    -c Release --no-restore --no-build tools/Lefty.Schematron.Cli -o nupkg -p:Version=${VERSION}
-
 
 #
 # Artifacts
@@ -69,11 +63,6 @@ dotnet pack    -c Release --no-restore --no-build tools/Lefty.Schematron.Cli -o 
 
 mkdir -p artifacts
 rm -f artifacts/*.zip
-
-(
-    cd  tmp/win-x64
-    zip -qr  ../../artifacts/schtronui-win-x64-${VERSION}.zip  .
-)
 
 
 #
@@ -84,8 +73,7 @@ rm -f artifacts/*.zip
 # forever. Keep the irreversible step last.
 # ------------------------------------------------------------------------
 
-gh release create v${VERSION} --notes="Release v${VERSION}" \
-   artifacts/schtronui-win-x64-${VERSION}.zip
+gh release create v${VERSION} --notes="Release v${VERSION}"
 
 
 #

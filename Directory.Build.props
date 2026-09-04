@@ -24,7 +24,7 @@
     <IsPackable>false</IsPackable>
     <PackageIconUrl>https://media.githubusercontent.com/media/filipetoscano/ado-pull/master/docs/img/icon.png</PackageIconUrl>
     <PackageIcon>icon.png</PackageIcon>
-    <PackageTags>schematron</PackageTags>
+    <PackageTags>ado</PackageTags>
 
     <!-- Debuging properties -->
     <!-- Deterministic source paths in symbols, for CI builds only -->

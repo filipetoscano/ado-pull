@@ -35,8 +35,8 @@ public class IterationListTool
 
         foreach ( var i in iterations.OrderByDescending( x => x.DateEnd ) )
         { 
-            sb.AppendFormat( "| {0} | {0} | {0} |", 
-                i.Name, 
+            sb.AppendFormat( "| {0} | {1} | {2} |",
+                i.Name,
                 i.DateStart?.ToString( "yyyy-MM-dd" ) ?? "",
                 i.DateEnd?.ToString( "yyyy-MM-dd" ) ?? "" );
 

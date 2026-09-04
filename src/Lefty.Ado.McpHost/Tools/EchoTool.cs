@@ -12,8 +12,6 @@ public static class EchoTool
     [Description( "Echoes the message back to the client." )]
     public static string Echo( string message )
     {
-        Console.WriteLine( "received Echo" );
-
         return $"hello {message}";
     }
 }
