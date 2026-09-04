@@ -1,0 +1,19 @@
+# Root ignores
+/.nuget/
+/artifacts/
+/data/
+/tmp/
+/TestResults/
+
+# Global ignores
+bin/
+obj/
+.vs/
+*.csproj.user
+*.pubxml.user
+*.sqlproj.user
+*.pptx
+
+# Custom ignores
+
+# eof

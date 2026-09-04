@@ -1,0 +1,31 @@
+# Default: treat all text files as LF
+* text=auto eol=lf
+
+# Source
+*.cs          text eol=lf
+*.csproj      text eol=lf
+*.props       text eol=lf
+*.slnx        text eol=lf
+
+# Config
+.editorconfig text eol=lf
+.gitattributes text eol=lf
+.gitignore    text eol=lf
+
+# CI / scripts
+*.yml         text eol=lf
+*.sh          text eol=lf
+
+# Docs
+*.md          text eol=lf
+
+# XML resources
+*.xsl         text eol=lf
+*.xsd         text eol=lf
+*.xml         text eol=lf
+
+# Binary — never touch line endings
+*.dll         binary
+*.png         binary
+*.nupkg       binary
+*.snupkg      binary
