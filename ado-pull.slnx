@@ -13,6 +13,8 @@
     <File Path="README.md" />
   </Folder>
   <Folder Name="/src/">
+    <Project Path="src/Lefty.Ado.McpHost/Lefty.Ado.McpHost.csproj" Id="bfc62443-c640-4909-92a4-ca503ff7d819" />
+    <Project Path="src/Lefty.Ado/Lefty.Ado.csproj" />
   </Folder>
   <Folder Name="/tests/">
   </Folder>

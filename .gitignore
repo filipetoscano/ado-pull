@@ -15,5 +15,6 @@ obj/
 *.pptx
 
 # Custom ignores
+src/Lefty.Ado.McpHost/*.cmd
 
 # eof
