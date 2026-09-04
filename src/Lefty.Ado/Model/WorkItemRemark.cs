@@ -1,13 +1,10 @@
 ﻿namespace Lefty.Ado.Model;
 
 /// <summary />
-public class ItemTransition
+public class WorkItemRemark
 {
     /// <summary />
-    public required string From { get; set; }
-
-    /// <summary />
-    public required string To { get; set; }
+    public required string Text { get; set; }
 
     /// <summary />
     public required User By { get; set; }

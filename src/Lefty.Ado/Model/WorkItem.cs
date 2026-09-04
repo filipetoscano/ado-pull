@@ -1,7 +1,7 @@
 ﻿namespace Lefty.Ado.Model;
 
 /// <summary />
-public record Item
+public record WorkItem
 {
     /// <summary />
     public int Id { get; set; }
@@ -45,8 +45,8 @@ public record Item
 
 
     /// <summary />
-    public required IReadOnlyList<ItemTransition> Transitions { get; set; }
+    public required IReadOnlyList<WorkItemTransition> Transitions { get; set; }
 
     /// <summary />
-    public required IReadOnlyList<ItemRemark> Remarks { get; set; }
+    public required IReadOnlyList<WorkItemRemark> Remarks { get; set; }
 }
