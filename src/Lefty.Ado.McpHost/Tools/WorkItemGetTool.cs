@@ -23,13 +23,13 @@ public class WorkItemGetTool
     /// <summary />
     [McpServerTool( Name = "workitem-get" )]
     [Description( "Gets a single work item by id." )]
-    public async Task<string> WorkItemGet( int id, CancellationToken cancellationToken )
+    public async Task<string> WorkItemGet( string project, int id, CancellationToken cancellationToken )
     {
         WorkItem wi;
 
         try
         {
-            wi = await _ado.WorkItemGetAsync( id, cancellationToken );
+            wi = await _ado.WorkItemGetAsync( project, id, cancellationToken );
         }
         catch ( HttpRequestException ex ) when ( ex.StatusCode == HttpStatusCode.NotFound )
         {

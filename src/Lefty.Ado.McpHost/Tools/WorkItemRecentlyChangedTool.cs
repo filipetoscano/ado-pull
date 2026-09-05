@@ -21,9 +21,9 @@ public class WorkItemRecentlyChangedTool
     /// <summary />
     [McpServerTool( Name = "workitem-recently-changed" )]
     [Description( "Lists work items changed within the last N hours." )]
-    public async Task<string> WorkItemRecentlyChanged( int hours, CancellationToken cancellationToken )
+    public async Task<string> WorkItemRecentlyChanged( string project, int hours, CancellationToken cancellationToken )
     {
-        var workItems = await _ado.WorkItemRecentlyChangedAsync( hours, cancellationToken );
+        var workItems = await _ado.WorkItemRecentlyChangedAsync( project, hours, cancellationToken );
 
 
         /*

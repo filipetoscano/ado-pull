@@ -17,7 +17,6 @@ public class Program
         builder.Services.Configure<AdoServiceOptions>( o =>
         {
             o.Organization = Environment.GetEnvironmentVariable( "ADO_ORG" )!;
-            o.DefaultProject = Environment.GetEnvironmentVariable( "ADO_PROJ" )!;
             o.PersonalAccessToken = Environment.GetEnvironmentVariable( "ADO_PAT" )!;
         } );
 
@@ -33,7 +32,7 @@ public class Program
             options.AddPolicy( "McpInspector", policy =>
             {
                 policy
-                    .WithOrigins( "http://localhost:6274" )
+                    .WithOrigins( "http://localhost:6275" )
                     .WithMethods( "POST", "GET", "DELETE" )
                     .WithHeaders(
                         "Content-Type",

@@ -7,8 +7,5 @@ public class AdoServiceOptions
     public required string Organization { get; set; }
 
     /// <summary />
-    public required string DefaultProject { get; set; }
-
-    /// <summary />
     public required string PersonalAccessToken { get; set; }
 }

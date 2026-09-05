@@ -15,5 +15,12 @@ public interface IAdoService
     Task<IReadOnlyList<WorkItem>> WorkItemRecentlyChangedAsync( string project, int hourWindow, CancellationToken cancellationToken = default );
 
     /// <summary />
-    Task<WorkItem> WorkItemGetAsync( string project, int id, CancellationToken cancellationToken );
+    Task<WorkItem> WorkItemGetAsync( string project, int id, CancellationToken cancellationToken = default );
+
+
+    /// <summary />
+    Task<IReadOnlyList<TestPlan>> TestPlanListAsync( string project, CancellationToken cancellationToken = default );
+
+    /// <summary />
+    Task<IReadOnlyList<TestSuite>> TestSuiteListAsync( string project, int planId, CancellationToken cancellationToken = default );
 }

@@ -21,9 +21,9 @@ public class WorkItemListTool
     /// <summary />
     [McpServerTool( Name = "workitem-list" )]
     [Description( "Lists active (non-closed) work items." )]
-    public async Task<string> WorkItemList()
+    public async Task<string> WorkItemList( string project )
     {
-        var workItems = await _ado.WorkItemListAsync();
+        var workItems = await _ado.WorkItemListAsync( project );
 
 
         /*

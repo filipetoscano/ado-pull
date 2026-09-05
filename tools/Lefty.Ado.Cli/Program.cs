@@ -48,7 +48,6 @@ public class Program
         svc.Configure<AdoServiceOptions>( o =>
         {
             o.Organization = Environment.GetEnvironmentVariable( "ADO_ORG" )!;
-            o.DefaultProject = Environment.GetEnvironmentVariable( "ADO_PROJ" )!;
             o.PersonalAccessToken = Environment.GetEnvironmentVariable( "ADO_PAT" )!;
         } );
 

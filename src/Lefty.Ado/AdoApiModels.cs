@@ -88,3 +88,43 @@ internal sealed class WorkItemCommentsResultDto
 {
     public List<WorkItemCommentDto> Comments { get; set; } = new();
 }
+
+
+internal sealed class TestSuiteReferenceDto
+{
+    public int Id { get; set; }
+}
+
+
+internal sealed class TestSuiteDto
+{
+    public int Id { get; set; }
+    public string Name { get; set; } = "";
+    public string SuiteType { get; set; } = "";
+    public TestSuiteReferenceDto? ParentSuite { get; set; }
+}
+
+
+internal sealed class TestSuiteListResultDto
+{
+    public List<TestSuiteDto> Value { get; set; } = new();
+}
+
+
+internal sealed class TestPlanDto
+{
+    public int Id { get; set; }
+    public string Name { get; set; } = "";
+    public string? AreaPath { get; set; }
+    public string? Iteration { get; set; }
+    public string State { get; set; } = "";
+    public DateTimeOffset? StartDate { get; set; }
+    public DateTimeOffset? EndDate { get; set; }
+    public IdentityRefDto? Owner { get; set; }
+}
+
+
+internal sealed class TestPlanListResultDto
+{
+    public List<TestPlanDto> Value { get; set; } = new();
+}

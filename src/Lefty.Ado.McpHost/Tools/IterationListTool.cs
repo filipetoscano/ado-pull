@@ -21,9 +21,9 @@ public class IterationListTool
     /// <summary />
     [ McpServerTool( Name = "iteration-list" )]
     [Description( "Lists iterations." )]
-    public async Task<string> IterationList()
+    public async Task<string> IterationList( string project )
     {
-        var iterations = await _ado.IterationListAsync();
+        var iterations = await _ado.IterationListAsync( project );
 
 
         /*
