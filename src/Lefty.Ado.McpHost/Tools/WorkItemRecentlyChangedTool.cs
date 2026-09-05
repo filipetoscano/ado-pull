@@ -30,19 +30,20 @@ public class WorkItemRecentlyChangedTool
          *
          */
         var sb = new StringBuilder();
-        sb.AppendLine( "| Id | Component | Title | Type | State | Assigned To | Changed |" );
-        sb.AppendLine( "|----|-----------|-------|------|-------|-------------|---------|" );
+        sb.AppendLine( "| Id | Component | Title | Type | State | Assigned To | Changed | Iteration |" );
+        sb.AppendLine( "|----|-----------|-------|------|-------|-------------|---------|-----------|" );
 
         foreach ( var wi in workItems.OrderByDescending( x => x.MomentActivity ) )
         {
-            sb.AppendFormat( "| {0} | {1} | {2} | {3} | {4} | {5} | {6:yyyy-MM-dd HH:mm} |",
+            sb.AppendFormat( "| {0} | {1} | {2} | {3} | {4} | {5} | {6:yyyy-MM-dd HH:mm} | {7} |",
                 wi.Id,
                 wi.Component,
                 wi.Title,
                 wi.IssueType,
                 wi.State,
                 wi.AssignedTo?.DisplayName ?? "",
-                wi.MomentActivity );
+                wi.MomentActivity,
+                wi.Iteration?.Name ?? "" );
 
             sb.AppendLine();
         }
