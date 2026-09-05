@@ -8,6 +8,7 @@ namespace Lefty.Ado;
 
 internal sealed class IdentityRefDto
 {
+    public Guid Id { get; set; }
     public string? DisplayName { get; set; }
     public string? UniqueName { get; set; }
 }
@@ -22,6 +23,7 @@ internal sealed class ClassificationNodeAttributesDto
 
 internal sealed class ClassificationNodeDto
 {
+    public Guid Identifier { get; set; }
     public string Name { get; set; } = "";
     public ClassificationNodeAttributesDto? Attributes { get; set; }
     public List<ClassificationNodeDto>? Children { get; set; }

@@ -6,6 +6,11 @@
 public record Iteration
 {
     /// <summary>
+    /// ADO's stable identifier for the iteration (classification node <c>identifier</c>).
+    /// </summary>
+    public required Guid Id { get; set; }
+
+    /// <summary>
     /// Name of the iteration.
     /// </summary>
     public required string Name { get; set; }

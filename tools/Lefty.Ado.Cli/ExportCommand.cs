@@ -50,9 +50,9 @@ public class ExportCommand
          * 
          */
 
-        // open output
-        // run SqliteSchema
-        // run DatabaseReset
+        // open output file
+        // run SqliteSchema file (load as embedded resource)
+        // run DatabaseReset file (load as embedded resource)
 
 
         // open transaction

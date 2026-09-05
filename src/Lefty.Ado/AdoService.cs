@@ -87,6 +87,7 @@ public class AdoService : IAdoService
         {
             into.Add( new Iteration
             {
+                Id = node.Identifier,
                 Name = node.Name,
                 DateStart = node.Attributes?.StartDate is { } s ? DateOnly.FromDateTime( s.UtcDateTime ) : null,
                 DateEnd = node.Attributes?.FinishDate is { } f ? DateOnly.FromDateTime( f.UtcDateTime ) : null,
@@ -294,7 +295,7 @@ public class AdoService : IAdoService
 
             iteration = iterationsByName.TryGetValue( iterationName, out var found )
                 ? found
-                : new Iteration { Name = iterationName };
+                : new Iteration { Id = Guid.Empty, Name = iterationName };
         }
 
         var tags = GetString( fields, "System.Tags" );
@@ -356,7 +357,7 @@ public class AdoService : IAdoService
             {
                 From = from,
                 To = to,
-                By = new User { DisplayName = update.RevisedBy.DisplayName ?? "", Upn = update.RevisedBy.UniqueName ?? "" },
+                By = new User { Id = update.RevisedBy.Id, DisplayName = update.RevisedBy.DisplayName ?? "", Upn = update.RevisedBy.UniqueName ?? "" },
                 Moment = update.RevisedDate.Value.UtcDateTime,
             } );
         }
@@ -380,7 +381,7 @@ public class AdoService : IAdoService
             .Select( c => new WorkItemRemark
             {
                 Text = c.Text,
-                By = new User { DisplayName = c.CreatedBy!.DisplayName ?? "", Upn = c.CreatedBy!.UniqueName ?? "" },
+                By = new User { Id = c.CreatedBy!.Id, DisplayName = c.CreatedBy!.DisplayName ?? "", Upn = c.CreatedBy!.UniqueName ?? "" },
                 Moment = c.CreatedDate!.Value.UtcDateTime,
             } )
             .ToList();
@@ -411,12 +412,15 @@ public class AdoService : IAdoService
         if ( !fields.TryGetValue( name, out var el ) || el.ValueKind != JsonValueKind.Object )
             return null;
 
+        var id = el.TryGetProperty( "id", out var idEl ) && idEl.ValueKind == JsonValueKind.String && Guid.TryParse( idEl.GetString(), out var parsedId )
+            ? parsedId
+            : (Guid?)null;
         var displayName = el.TryGetProperty( "displayName", out var dn ) ? dn.GetString() : null;
         var uniqueName = el.TryGetProperty( "uniqueName", out var un ) ? un.GetString() : null;
 
-        if ( displayName is null || uniqueName is null )
+        if ( id is null || displayName is null || uniqueName is null )
             return null;
 
-        return new User { DisplayName = displayName, Upn = uniqueName };
+        return new User { Id = id.Value, DisplayName = displayName, Upn = uniqueName };
     }
 }
