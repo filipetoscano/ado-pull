@@ -240,14 +240,37 @@ public class AdoService : IAdoService
     }
 
 
+    /// <summary>
+    /// Azure DevOps's built-in test-management and collaboration artifact types.
+    /// These are work items in the ADO data model (a WIQL query with no type
+    /// filter returns them alongside real backlog items), but they aren't
+    /// work the caller is asking about, so they're excluded here.
+    /// </summary>
+    private static readonly string[] ExcludedWorkItemTypes =
+    {
+        "Test Plan",
+        "Test Suite",
+        "Test Case",
+        "Shared Steps",
+        "Shared Parameter",
+        "Code Review Request",
+        "Code Review Response",
+        "Feedback Request",
+        "Feedback Response",
+    };
+
+
     /// <summary />
     private async Task<List<int>> ListWorkItemIds( string project, DateTime? changedSince, CancellationToken cancellationToken )
     {
         var url = $"{Uri.EscapeDataString( project )}/_apis/wit/wiql?api-version={ApiVersion}";
 
+        var excludedTypes = string.Join( ", ", ExcludedWorkItemTypes.Select( t => $"'{t}'" ) );
+
         var query =
             "SELECT [System.Id] FROM WorkItems " +
             "WHERE [System.TeamProject] = @project " +
+            $"AND [System.WorkItemType] NOT IN ({excludedTypes}) " +
             // "AND [System.State] NOT IN ('Closed', 'Removed', 'Done') " +
             ( changedSince is { } since ? $"AND [System.ChangedDate] >= '{since:yyyy-MM-dd}' " : "" ) +
             "ORDER BY [System.ChangedDate] DESC";
