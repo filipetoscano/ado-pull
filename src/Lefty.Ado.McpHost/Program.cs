@@ -49,7 +49,18 @@ public class Program
          */
         var app = builder.Build();
 
-        app.UseHttpsRedirection();
+
+        /*
+         * Skip HTTPS redirection in Development: tools like the MCP Inspector
+         * run their proxy on Node, which validates TLS against its own CA
+         * bundle rather than the OS store, so it rejects Kestrel's self-signed
+         * dev certificate even when the OS/.NET trust it. Redirecting an HTTP
+         * hit back to HTTPS would just bounce those clients into that failure,
+         * so plain HTTP is left reachable directly for local dev.
+         */
+        if ( app.Environment.IsDevelopment() == false )
+            app.UseHttpsRedirection();
+
         app.UseCors();
 
         app.UseAuthorization();
