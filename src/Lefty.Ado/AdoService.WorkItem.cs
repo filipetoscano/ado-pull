@@ -342,7 +342,7 @@ public partial class AdoService
 
         var id = el.TryGetProperty( "id", out var idEl ) && idEl.ValueKind == JsonValueKind.String && Guid.TryParse( idEl.GetString(), out var parsedId )
             ? parsedId
-            : (Guid?)null;
+            : (Guid?) null;
         var displayName = el.TryGetProperty( "displayName", out var dn ) ? dn.GetString() : null;
         var uniqueName = el.TryGetProperty( "uniqueName", out var un ) ? un.GetString() : null;
 

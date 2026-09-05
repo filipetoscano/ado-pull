@@ -19,7 +19,7 @@ public class IterationListTool
 
 
     /// <summary />
-    [ McpServerTool( Name = "iteration-list" )]
+    [McpServerTool( Name = "iteration-list" )]
     [Description( "Lists iterations." )]
     public async Task<string> IterationList( string project )
     {
@@ -34,7 +34,7 @@ public class IterationListTool
         sb.AppendLine( "|-----------|-------|-----|" );
 
         foreach ( var i in iterations.OrderByDescending( x => x.DateEnd ) )
-        { 
+        {
             sb.AppendFormat( "| {0} | {1} | {2} |",
                 i.Name,
                 i.DateStart?.ToString( "yyyy-MM-dd" ) ?? "",

@@ -200,9 +200,9 @@ public class ExportCommand
             assignedToUserId.Value = item.AssignedTo is { } a ? a.Id.ToString() : DBNull.Value;
             tags.Value = string.Join( ';', item.Tags );
             iterationId.Value = item.Iteration is { } it ? it.Id.ToString() : DBNull.Value;
-            issueType.Value = (object?)item.IssueType ?? DBNull.Value;
-            component.Value = (object?)item.Component ?? DBNull.Value;
-            severity.Value = (object?)item.Severity ?? DBNull.Value;
+            issueType.Value = (object?) item.IssueType ?? DBNull.Value;
+            component.Value = (object?) item.Component ?? DBNull.Value;
+            severity.Value = (object?) item.Severity ?? DBNull.Value;
 
             cmd.ExecuteNonQuery();
         }
