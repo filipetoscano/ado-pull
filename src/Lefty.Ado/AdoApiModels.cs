@@ -128,3 +128,60 @@ internal sealed class TestPlanListResultDto
 {
     public List<TestPlanDto> Value { get; set; } = new();
 }
+
+
+internal sealed class TestPointConfigurationRefDto
+{
+    public string? Id { get; set; }
+    public string? Name { get; set; }
+}
+
+
+internal sealed class TestPointRunRefDto
+{
+    public string? Id { get; set; }
+}
+
+
+internal sealed class TestPointResultRefDto
+{
+    public string? Id { get; set; }
+}
+
+
+internal sealed class TestPointTestCaseRefDto
+{
+    public string Id { get; set; } = "";
+}
+
+
+internal sealed class WorkItemPropertyValueDto
+{
+    public string? Key { get; set; }
+    public string? Value { get; set; }
+}
+
+
+internal sealed class WorkItemPropertyDto
+{
+    public WorkItemPropertyValueDto? WorkItem { get; set; }
+}
+
+
+internal sealed class TestPointDto
+{
+    public int Id { get; set; }
+    public IdentityRefDto? AssignedTo { get; set; }
+    public TestPointConfigurationRefDto? Configuration { get; set; }
+    public string? Outcome { get; set; }
+    public TestPointRunRefDto? LastTestRun { get; set; }
+    public TestPointResultRefDto? LastResult { get; set; }
+    public TestPointTestCaseRefDto TestCase { get; set; } = new();
+    public List<WorkItemPropertyDto>? WorkItemProperties { get; set; }
+}
+
+
+internal sealed class TestPointListResultDto
+{
+    public List<TestPointDto> Value { get; set; } = new();
+}

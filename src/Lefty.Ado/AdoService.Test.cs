@@ -105,6 +105,8 @@ public partial class AdoService
         }
         while ( continuationToken is not null );
 
+        await FillTestCasesAsync( project, planId, suites, cancellationToken );
+
         return suites;
     }
 
@@ -119,6 +121,101 @@ public partial class AdoService
             SuiteType = dto.SuiteType,
             ParentSuiteId = dto.ParentSuite?.Id,
             TestCases = Array.Empty<TestCase>(),
+        };
+    }
+
+
+    /// <summary>
+    /// One extra call per suite (no bulk "test cases for many suites" endpoint
+    /// exists), same bounded-concurrency shape as FillTransitionsAndRemarksAsync.
+    /// </summary>
+    private async Task FillTestCasesAsync( string project, int planId, IReadOnlyList<TestSuite> suites, CancellationToken cancellationToken )
+    {
+        using var throttle = new SemaphoreSlim( 8 );
+
+        await Task.WhenAll( suites.Select( async suite =>
+        {
+            await throttle.WaitAsync( cancellationToken );
+
+            try
+            {
+                suite.TestCases = await FetchTestCasesAsync( project, planId, suite.Id, cancellationToken );
+            }
+            finally
+            {
+                throttle.Release();
+            }
+        } ) );
+    }
+
+
+    /// <summary>
+    /// Test cases for a suite come from the point list -- one row per (test
+    /// case, configuration) -- which also carries each point's current
+    /// outcome and last run/result reference "for free". Paginated via
+    /// $skip/$top rather than a continuation-token header, unlike every
+    /// other list call in this file.
+    /// </summary>
+    private async Task<IReadOnlyList<TestCase>> FetchTestCasesAsync( string project, int planId, int suiteId, CancellationToken cancellationToken )
+    {
+        const int pageSize = 200;
+        var points = new List<TestPointDto>();
+        var skip = 0;
+
+        while ( true )
+        {
+            var url = $"{Uri.EscapeDataString( project )}/_apis/test/Plans/{planId}/Suites/{suiteId}/points"
+                + $"?includePointDetails=true&witFields=System.Title&$skip={skip}&$top={pageSize}&api-version={ApiVersion}";
+
+            var result = await _http.GetFromJsonAsync<TestPointListResultDto>( url, JsonOptions, cancellationToken )
+                ?? throw new InvalidOperationException( "Test point list response was empty." );
+
+            points.AddRange( result.Value );
+
+            if ( result.Value.Count < pageSize )
+                break;
+
+            skip += pageSize;
+        }
+
+        return points
+            .GroupBy( p => p.TestCase.Id )
+            .Select( g => MapTestCase( g.Key, g.ToList() ) )
+            .ToList();
+    }
+
+
+    /// <summary />
+    private static TestCase MapTestCase( string testCaseId, List<TestPointDto> points )
+    {
+        var title = points
+            .SelectMany( p => p.WorkItemProperties ?? Enumerable.Empty<WorkItemPropertyDto>() )
+            .Select( p => p.WorkItem )
+            .FirstOrDefault( w => w?.Key == "System.Title" )
+            ?.Value ?? "";
+
+        return new TestCase
+        {
+            WorkItemId = int.Parse( testCaseId ),
+            Title = title,
+            Points = points.Select( MapTestPoint ).ToList(),
+        };
+    }
+
+
+    /// <summary />
+    private static TestPoint MapTestPoint( TestPointDto dto )
+    {
+        return new TestPoint
+        {
+            Id = dto.Id,
+            ConfigurationName = dto.Configuration?.Name ?? "",
+            Tester = dto.AssignedTo is { } a
+                ? new User { Id = a.Id, DisplayName = a.DisplayName ?? "", Upn = a.UniqueName ?? "" }
+                : null,
+            Outcome = dto.Outcome,
+            LastRunId = dto.LastTestRun?.Id is { } r && int.TryParse( r, out var runId ) ? runId : null,
+            LastResultId = dto.LastResult?.Id is { } rid && int.TryParse( rid, out var resultId ) ? resultId : null,
         };
     }
 }

@@ -13,4 +13,13 @@ public record TestPoint
 
     /// <summary />
     public User? Tester { get; set; }
+
+    /// <summary />
+    public string? Outcome { get; set; }
+
+    /// <summary />
+    public int? LastRunId { get; set; }
+
+    /// <summary />
+    public int? LastResultId { get; set; }
 }
