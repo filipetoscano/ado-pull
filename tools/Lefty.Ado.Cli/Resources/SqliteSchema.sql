@@ -3,7 +3,7 @@
 -- Mapped 1:1 with the model classes from Lefty.Ado.Abstractions
 --
 
-create table Iteration
+create table if not exists Iteration
 (
     Id text not null primary key,
     Name text not null,
@@ -11,14 +11,14 @@ create table Iteration
     DateEnd date null
 );
 
-create table AppUser
+create table if not exists AppUser
 (
     Id text not null primary key,
     DisplayName text not null,
     Upn text not null
 );
 
-create table WorkItem
+create table if not exists WorkItem
 (
     Id integer not null primary key,
     Title text not null,
@@ -35,7 +35,7 @@ create table WorkItem
     Severity text null
 );
 
-create table WorkItemRemark
+create table if not exists WorkItemRemark
 (
     ItemId integer not null references WorkItem (Id),
     Text text not null,
@@ -43,7 +43,7 @@ create table WorkItemRemark
     Moment datetime not null
 );
 
-create table WorkItemTransition
+create table if not exists WorkItemTransition
 (
     ItemId integer not null references WorkItem (Id),
     [From] text not null,
