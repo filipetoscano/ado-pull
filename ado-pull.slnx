@@ -19,6 +19,7 @@
     <Project Path="src/Lefty.Ado/Lefty.Ado.csproj" />
   </Folder>
   <Folder Name="/tests/">
+    <Project Path="tests/Lefty.Ado.Tests/Lefty.Ado.Tests.csproj" Id="246ad6da-1cd3-4267-9811-b19167205db7" />
   </Folder>
   <Folder Name="/tools/">
     <Project Path="tools/Lefty.Ado.Cli/Lefty.Ado.Cli.csproj" Id="3bf17069-2797-49a2-8cdc-af391cbe3a78" />
