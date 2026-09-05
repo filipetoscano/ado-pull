@@ -30,8 +30,9 @@ public class AdoService
         "System.AssignedTo",
         "System.Tags",
         "System.IterationPath",
-        "System.WorkItemType",
         "Microsoft.VSTS.Common.Severity",
+        "Custom.Component",
+        "Custom.IssueType",
     };
 
     private readonly HttpClient _http;
@@ -103,21 +104,15 @@ public class AdoService
     }
 
 
-    /// <summary>
-    /// Lists work items in <paramref name="project" /> that are not in a
-    /// terminal state ('Closed', 'Removed' or 'Done').
-    /// </summary>
+    /// <summary />
     public async Task<IReadOnlyList<WorkItem>> WorkItemListAsync( string project, CancellationToken cancellationToken = default )
     {
-        var ids = await QueryActiveWorkItemIdsAsync( project, cancellationToken );
+        var ids = await ListWorkItemIds( project, null, cancellationToken );
 
         if ( ids.Count == 0 )
             return Array.Empty<WorkItem>();
 
-        var iterations = await IterationListAsync( project, cancellationToken );
-        var iterationsByName = iterations
-            .GroupBy( x => x.Name, StringComparer.OrdinalIgnoreCase )
-            .ToDictionary( g => g.Key, g => g.First(), StringComparer.OrdinalIgnoreCase );
+        var iterationsByName = await BuildIterationLookupAsync( project, cancellationToken );
 
         var items = new List<WorkItem>();
 
@@ -126,12 +121,78 @@ public class AdoService
             items.AddRange( await FetchWorkItemBatchAsync( project, chunk, iterationsByName, cancellationToken ) );
         }
 
+        await FillTransitionsAndRemarksAsync( project, items, cancellationToken );
+
+        return items;
+    }
+
+
+    /// <summary />
+    public Task<IReadOnlyList<WorkItem>> WorkItemRecentlyChangedAsync( int hourWindow, CancellationToken cancellationToken = default )
+    {
+        return WorkItemRecentlyChangedAsync( _project, hourWindow, cancellationToken );
+    }
+
+
+    /// <summary>
+    /// Lists work items in <paramref name="project" /> whose
+    /// <c>System.ChangedDate</c> falls within the last <paramref name="hourWindow" /> hours.
+    /// </summary>
+    public async Task<IReadOnlyList<WorkItem>> WorkItemRecentlyChangedAsync( string project, int hourWindow, CancellationToken cancellationToken = default )
+    {
+        if ( hourWindow <= 0 )
+            throw new ArgumentOutOfRangeException( nameof( hourWindow ), hourWindow, "Must be greater than zero." );
+
+        var changedSince = DateTime.UtcNow.AddHours( -hourWindow );
 
         /*
-         * Transitions and remarks require one extra call per work item
-         * (no batch API exists for either), so fan them out with bounded
-         * concurrency rather than one at a time.
+         * This organization has WIQL restricted to date precision (no
+         * time-of-day in comparisons), so the exact hour cutoff can't be
+         * expressed in the query itself. Use a date-only lower bound -- one
+         * day earlier than needed, to absorb any server/local timezone
+         * difference -- as a coarse pre-filter, then re-check the precise
+         * cutoff in memory once each item's actual ChangedDate is known.
          */
+        var ids = await ListWorkItemIds( project, changedSince.Date.AddDays( -1 ), cancellationToken );
+
+        if ( ids.Count == 0 )
+            return Array.Empty<WorkItem>();
+
+        var iterationsByName = await BuildIterationLookupAsync( project, cancellationToken );
+
+        var items = new List<WorkItem>();
+
+        foreach ( var chunk in ids.Chunk( 200 ) )
+        {
+            items.AddRange( await FetchWorkItemBatchAsync( project, chunk, iterationsByName, cancellationToken ) );
+        }
+
+        items = items.Where( i => i.MomentActivity >= changedSince ).ToList();
+
+        await FillTransitionsAndRemarksAsync( project, items, cancellationToken );
+
+        return items;
+    }
+
+
+    /// <summary />
+    private async Task<IReadOnlyDictionary<string, Iteration>> BuildIterationLookupAsync( string project, CancellationToken cancellationToken )
+    {
+        var iterations = await IterationListAsync( project, cancellationToken );
+
+        return iterations
+            .GroupBy( x => x.Name, StringComparer.OrdinalIgnoreCase )
+            .ToDictionary( g => g.Key, g => g.First(), StringComparer.OrdinalIgnoreCase );
+    }
+
+
+    /// <summary>
+    /// Transitions and remarks require one extra call per work item (no batch
+    /// API exists for either), so fan them out with bounded concurrency
+    /// rather than one at a time.
+    /// </summary>
+    private async Task FillTransitionsAndRemarksAsync( string project, IReadOnlyList<WorkItem> items, CancellationToken cancellationToken )
+    {
         using var throttle = new SemaphoreSlim( 8 );
 
         await Task.WhenAll( items.Select( async item =>
@@ -148,20 +209,46 @@ public class AdoService
                 throttle.Release();
             }
         } ) );
+    }
 
-        return items;
+
+
+    /// <summary />
+    public Task<WorkItem> WorkItemGetAsync( int id, CancellationToken cancellationToken )
+    {
+        return WorkItemGetAsync( _project, id, cancellationToken );
     }
 
 
     /// <summary />
-    private async Task<List<int>> QueryActiveWorkItemIdsAsync( string project, CancellationToken cancellationToken )
+    public async Task<WorkItem> WorkItemGetAsync( string project, int id, CancellationToken cancellationToken )
+    {
+        var url = $"{Uri.EscapeDataString( project )}/_apis/wit/workitems/{id}?fields={string.Join( ',', WorkItemFields )}&api-version={ApiVersion}";
+
+        var dto = await _http.GetFromJsonAsync<WorkItemBatchItemDto>( url, JsonOptions, cancellationToken )
+            ?? throw new InvalidOperationException( $"Work item {id} response was empty." );
+
+        var iterationsByName = await BuildIterationLookupAsync( project, cancellationToken );
+
+        var item = MapWorkItem( dto, iterationsByName );
+
+        item.Transitions = await FetchTransitionsAsync( project, item.Id, cancellationToken );
+        item.Remarks = await FetchRemarksAsync( project, item.Id, cancellationToken );
+
+        return item;
+    }
+
+
+    /// <summary />
+    private async Task<List<int>> ListWorkItemIds( string project, DateTime? changedSince, CancellationToken cancellationToken )
     {
         var url = $"{Uri.EscapeDataString( project )}/_apis/wit/wiql?api-version={ApiVersion}";
 
         var query =
             "SELECT [System.Id] FROM WorkItems " +
             "WHERE [System.TeamProject] = @project " +
-            "AND [System.State] NOT IN ('Closed', 'Removed', 'Done') " +
+            // "AND [System.State] NOT IN ('Closed', 'Removed', 'Done') " +
+            ( changedSince is { } since ? $"AND [System.ChangedDate] >= '{since:yyyy-MM-dd}' " : "" ) +
             "ORDER BY [System.ChangedDate] DESC";
 
         var resp = await _http.PostAsJsonAsync( url, new { query }, JsonOptions, cancellationToken );
@@ -229,8 +316,8 @@ public class AdoService
                 ? Array.Empty<string>()
                 : tags.Split( ';', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries ),
             Iteration = iteration,
-            IssueType = GetString( fields, "System.WorkItemType" ),
-            Component = null,
+            IssueType = GetString( fields, "Custom.IssueType" ),
+            Component = GetString( fields, "Custom.Component" ),
             Severity = GetString( fields, "Microsoft.VSTS.Common.Severity" ),
             Transitions = Array.Empty<WorkItemTransition>(),
             Remarks = Array.Empty<WorkItemRemark>(),

@@ -14,6 +14,7 @@
     <File Path="README.md" />
   </Folder>
   <Folder Name="/src/">
+    <Project Path="src/Lefty.Ado.Abstractions/Lefty.Ado.Abstractions.csproj" Id="e5667e40-7b08-4ace-8afa-f6a210dfc8dc" />
     <Project Path="src/Lefty.Ado.McpHost/Lefty.Ado.McpHost.csproj" Id="bfc62443-c640-4909-92a4-ca503ff7d819" />
     <Project Path="src/Lefty.Ado/Lefty.Ado.csproj" />
   </Folder>

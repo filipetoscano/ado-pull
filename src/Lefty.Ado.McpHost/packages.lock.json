@@ -33,6 +33,12 @@
         }
       },
       "lefty.ado": {
+        "type": "Project",
+        "dependencies": {
+          "Lefty.Ado.Abstractions": "[0.1.0, )"
+        }
+      },
+      "lefty.ado.abstractions": {
         "type": "Project"
       }
     }
