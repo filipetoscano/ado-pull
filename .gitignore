@@ -16,5 +16,6 @@ obj/
 
 # Custom ignores
 src/Lefty.Ado.McpHost/*.cmd
+tools/Lefty.Ado.Cli/*.cmd
 
 # eof

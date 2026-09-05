@@ -9,7 +9,7 @@ using System.Text.Json;
 namespace Lefty.Ado;
 
 /// <summary />
-public class AdoService
+public class AdoService : IAdoService
 {
     private const string ApiVersion = "7.1";
     private const string CommentsApiVersion = "7.1-preview.4";
