@@ -121,7 +121,7 @@ public class ExportCommand
     {
         using var cmd = connection.CreateCommand();
         cmd.Transaction = transaction;
-        cmd.CommandText = "insert into Iteration (Id, Name, DateStart, DateEnd) values ($Id, $Name, $DateStart, $DateEnd)";
+        cmd.CommandText = "insert into Iterations (Id, Name, DateStart, DateEnd) values ($Id, $Name, $DateStart, $DateEnd)";
 
         var id = cmd.CreateParameter(); id.ParameterName = "$Id"; cmd.Parameters.Add( id );
         var name = cmd.CreateParameter(); name.ParameterName = "$Name"; cmd.Parameters.Add( name );
@@ -145,7 +145,7 @@ public class ExportCommand
     {
         using var cmd = connection.CreateCommand();
         cmd.Transaction = transaction;
-        cmd.CommandText = "insert into AppUser (Id, DisplayName, Upn) values ($Id, $DisplayName, $Upn)";
+        cmd.CommandText = "insert into AppUsers (Id, DisplayName, Upn) values ($Id, $DisplayName, $Upn)";
 
         var id = cmd.CreateParameter(); id.ParameterName = "$Id"; cmd.Parameters.Add( id );
         var displayName = cmd.CreateParameter(); displayName.ParameterName = "$DisplayName"; cmd.Parameters.Add( displayName );
@@ -168,7 +168,7 @@ public class ExportCommand
         using var cmd = connection.CreateCommand();
         cmd.Transaction = transaction;
         cmd.CommandText = """
-            insert into WorkItem
+            insert into WorkItems
                 (Id, Title, Description, State, CreatedByUserId, MomentCreated, MomentActivity, AssignedToUserId, Tags, IterationId, IssueType, Component, Severity)
             values
                 ($Id, $Title, $Description, $State, $CreatedByUserId, $MomentCreated, $MomentActivity, $AssignedToUserId, $Tags, $IterationId, $IssueType, $Component, $Severity)
@@ -214,7 +214,7 @@ public class ExportCommand
     {
         using var cmd = connection.CreateCommand();
         cmd.Transaction = transaction;
-        cmd.CommandText = "insert into WorkItemRemark (ItemId, Text, ByUserId, Moment) values ($ItemId, $Text, $ByUserId, $Moment)";
+        cmd.CommandText = "insert into WorkItemRemarks (ItemId, Text, ByUserId, Moment) values ($ItemId, $Text, $ByUserId, $Moment)";
 
         var itemId = cmd.CreateParameter(); itemId.ParameterName = "$ItemId"; cmd.Parameters.Add( itemId );
         var text = cmd.CreateParameter(); text.ParameterName = "$Text"; cmd.Parameters.Add( text );
@@ -241,7 +241,7 @@ public class ExportCommand
     {
         using var cmd = connection.CreateCommand();
         cmd.Transaction = transaction;
-        cmd.CommandText = "insert into WorkItemTransition (ItemId, [From], [To], ByUserId, Moment) values ($ItemId, $From, $To, $ByUserId, $Moment)";
+        cmd.CommandText = "insert into WorkItemTransitions (ItemId, [From], [To], ByUserId, Moment) values ($ItemId, $From, $To, $ByUserId, $Moment)";
 
         var itemId = cmd.CreateParameter(); itemId.ParameterName = "$ItemId"; cmd.Parameters.Add( itemId );
         var from = cmd.CreateParameter(); from.ParameterName = "$From"; cmd.Parameters.Add( from );

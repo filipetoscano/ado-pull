@@ -3,7 +3,7 @@
 -- Mapped 1:1 with the model classes from Lefty.Ado.Abstractions
 --
 
-create table if not exists Iteration
+create table if not exists Iterations
 (
     Id text not null primary key,
     Name text not null,
@@ -11,44 +11,44 @@ create table if not exists Iteration
     DateEnd date null
 );
 
-create table if not exists AppUser
+create table if not exists AppUsers
 (
     Id text not null primary key,
     DisplayName text not null,
     Upn text not null
 );
 
-create table if not exists WorkItem
+create table if not exists WorkItems
 (
     Id integer not null primary key,
     Title text not null,
     Description text not null,
     State text not null,
-    CreatedByUserId text not null references AppUser (Id),
+    CreatedByUserId text not null references AppUsers (Id),
     MomentCreated datetime not null,
     MomentActivity datetime not null,
-    AssignedToUserId text null references AppUser (Id),
+    AssignedToUserId text null references AppUsers (Id),
     Tags text not null,
-    IterationId text null references Iteration (Id),
+    IterationId text null references Iterations (Id),
     IssueType text null,
     Component text null,
     Severity text null
 );
 
-create table if not exists WorkItemRemark
+create table if not exists WorkItemRemarks
 (
-    ItemId integer not null references WorkItem (Id),
+    ItemId integer not null references WorkItems (Id),
     Text text not null,
-    ByUserId text not null references AppUser (Id),
+    ByUserId text not null references AppUsers (Id),
     Moment datetime not null
 );
 
-create table if not exists WorkItemTransition
+create table if not exists WorkItemTransitions
 (
-    ItemId integer not null references WorkItem (Id),
+    ItemId integer not null references WorkItems (Id),
     [From] text not null,
     [To] text not null,
-    ByUserId text not null references AppUser (Id),
+    ByUserId text not null references AppUsers (Id),
     Moment datetime not null
 );
 

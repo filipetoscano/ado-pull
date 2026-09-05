@@ -2,10 +2,10 @@
 -- Reset
 --
 
-delete from WorkItemRemark;
-delete from WorkItemTransition;
-delete from WorkItem;
-delete from AppUser;
-delete from Iteration;
+delete from WorkItemRemarks;
+delete from WorkItemTransitions;
+delete from WorkItems;
+delete from AppUsers;
+delete from Iterations;
 
 -- eof
