@@ -66,7 +66,7 @@ public class WorkItemGetTool
             sb.AppendLine( "## Transitions" );
 
             foreach ( var t in wi.Transitions.OrderBy( x => x.Moment ) )
-                sb.AppendLine( $"- {t.Moment:yyyy-MM-dd} {t.By.DisplayName}: {t.From} -> {t.To}" );
+                sb.AppendLine( $"- {t.Moment:yyyy-MM-dd} {t.By.DisplayName}: {t.From ?? "(created)"} -> {t.To}" );
         }
 
         return sb.ToString();

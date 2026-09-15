@@ -254,7 +254,7 @@ public class ExportCommand
             foreach ( var transitionEntry in item.Transitions )
             {
                 itemId.Value = item.Id;
-                from.Value = transitionEntry.From;
+                from.Value = (object?) transitionEntry.From ?? DBNull.Value;
                 to.Value = transitionEntry.To;
                 byUserId.Value = transitionEntry.By.Id.ToString();
                 moment.Value = transitionEntry.Moment;

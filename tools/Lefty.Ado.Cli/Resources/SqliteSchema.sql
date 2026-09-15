@@ -46,7 +46,7 @@ create table if not exists WorkItemRemarks
 create table if not exists WorkItemTransitions
 (
     ItemId integer not null references WorkItems (Id),
-    [From] text not null,
+    [From] text null,
     [To] text not null,
     ByUserId text not null references AppUsers (Id),
     Moment datetime not null

@@ -77,7 +77,7 @@ CREATE TABLE WorkItemRemarks
 CREATE TABLE WorkItemTransitions
 (
     ItemId integer not null references WorkItems (Id),       -- Item identifier
-    [From] text not null,                                    -- From state
+    [From] text null,                                        -- From state (null on creation)
     [To] text not null,                                      -- To state
     ByUserId text not null references AppUsers (Id),         -- User who made change
     Moment datetime not null                                 -- Moment when transition was made

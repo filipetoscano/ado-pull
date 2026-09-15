@@ -288,17 +288,31 @@ public partial class AdoService
 
         foreach ( var update in updates )
         {
-            if ( update.Fields is null || update.RevisedBy is null || update.RevisedDate is null )
+            if ( update.Fields is null || update.RevisedBy is null )
                 continue;
 
             if ( !update.Fields.TryGetValue( "System.State", out var change ) )
                 continue;
 
+            // A missing 'from' means this update is the work item's creation: kept, so the initial state is recorded.
             var from = change.OldValue is { ValueKind: JsonValueKind.String } ov ? ov.GetString() : null;
             var to = change.NewValue is { ValueKind: JsonValueKind.String } nv ? nv.GetString() : null;
 
-            // A missing 'from' means this update is the work item's creation, not a transition.
-            if ( from is null || to is null )
+            if ( to is null )
+                continue;
+
+            /*
+             * An update's revisedDate is when that revision was superseded by the
+             * next one, not when the change was made; System.ChangedDate holds the
+             * latter. Only fall back to revisedDate if the field is absent.
+             */
+            var moment = update.Fields.TryGetValue( "System.ChangedDate", out var changed )
+                && changed.NewValue is { ValueKind: JsonValueKind.String } cd
+                && cd.TryGetDateTimeOffset( out var changedDate )
+                    ? changedDate
+                    : update.RevisedDate;
+
+            if ( moment is null )
                 continue;
 
             transitions.Add( new WorkItemTransition
@@ -306,7 +320,7 @@ public partial class AdoService
                 From = from,
                 To = to,
                 By = new User { Id = update.RevisedBy.Id, DisplayName = update.RevisedBy.DisplayName ?? "", Upn = update.RevisedBy.UniqueName ?? "" },
-                Moment = update.RevisedDate.Value.UtcDateTime,
+                Moment = moment.Value.UtcDateTime,
             } );
         }
 
