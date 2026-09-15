@@ -26,7 +26,6 @@ cd ..
 # ------------------------------------------------------------------------
 if [ -z ${GITHUB_REF+x} ];      then die "GITHUB_REF is not set"; fi
 if [ -z ${GITHUB_TOKEN+x} ];    then die "GITHUB_TOKEN is not set"; fi
-if [ -z ${NUGET_APIKEY+x} ];    then die "NUGET_APIKEY is not set"; fi
 
 if [[ ! ${GITHUB_REF} =~ ^refs/tags/v[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?$ ]]; then
     die "GITHUB_REF is not a vN.N.N tag: ${GITHUB_REF}"
