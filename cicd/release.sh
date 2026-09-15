@@ -50,40 +50,28 @@ dotnet test    -c Release --no-restore --no-build -p:Version=${VERSION}
 
 
 #
-# Package
-# ------------------------------------------------------------------------
-
-mkdir -p nupkg
-rm -f nupkg/*.*
-
-
-#
 # Artifacts
 # ------------------------------------------------------------------------
+
+dotnet publish -c Release --runtime=win-x64   --self-contained tools/Lefty.Ado.Cli/Lefty.Ado.Cli.csproj -p:Version=${VERSION} -o tmp/win-x64
+dotnet publish -c Release --runtime=linux-x64 --self-contained tools/Lefty.Ado.Cli/Lefty.Ado.Cli.csproj -p:Version=${VERSION} -o tmp/linux-x64
+dotnet publish -c Release --runtime=osx-arm64 --self-contained tools/Lefty.Ado.Cli/Lefty.Ado.Cli.csproj -p:Version=${VERSION} -o tmp/osx-arm64
 
 mkdir -p artifacts
 rm -f artifacts/*.zip
 
+zip -j -r  artifacts/adopull-win-x64-${VERSION}.zip    tmp/win-x64/adopull.exe
+zip -j -r  artifacts/adopull-linux-x64-${VERSION}.zip  tmp/linux-x64/adopull
+zip -j -r  artifacts/adopull-osx-arm64-${VERSION}.zip  tmp/osx-arm64/adopull
+
 
 #
 # Release, including artifacts
-#
-# Everything reversible happens before the push to nuget.org: a release
-# can be deleted and a tag re-cut, but a published package version is
-# forever. Keep the irreversible step last.
 # ------------------------------------------------------------------------
 
-gh release create v${VERSION} --notes="Release v${VERSION}"
-
-
-#
-# Publish to nuget.org
-# ------------------------------------------------------------------------
-
-# NUGET_APIKEY must never reach the log: xtrace would echo the expanded
-# command line, and masking is the action's job, not something to rely on.
-set +x
-dotnet nuget push "nupkg/*.nupkg" --api-key "${NUGET_APIKEY}" --source=https://api.nuget.org/v3/index.json
-set -x
+gh release create v${VERSION} --notes="Release v${VERSION}" \
+   artifacts/adopull-win-x64-${VERSION}.zip \
+   artifacts/adopull-linux-x64-${VERSION}.zip \
+   artifacts/adopull-osx-arm64-${VERSION}.zip
 
 # eof
