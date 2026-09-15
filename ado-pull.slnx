@@ -8,7 +8,7 @@
   </Folder>
   <Folder Name="/sln/">
     <File Path=".gitignore" />
-    <File Path="Claude.md" />
+    <File Path="CLAUDE.md" />
     <File Path="Directory.Build.props" />
     <File Path="docs/Queries.md" />
     <File Path="global.json" />
