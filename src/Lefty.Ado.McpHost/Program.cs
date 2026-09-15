@@ -20,7 +20,7 @@ public class Program
             o.PersonalAccessToken = Environment.GetEnvironmentVariable( "ADO_PAT" )!;
         } );
 
-        builder.Services.AddHttpClient<AdoService>();
+        builder.Services.AddHttpClient<IAdoService, AdoService>();
 
         builder.Services.AddControllers();
         builder.Services.AddMcpServer()

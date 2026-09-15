@@ -52,8 +52,7 @@ public class Program
             o.PersonalAccessToken = Environment.GetEnvironmentVariable( "ADO_PAT" )!;
         } );
 
-        svc.AddTransient<IAdoService, AdoService>();
-        svc.AddHttpClient<AdoService>();
+        svc.AddHttpClient<IAdoService, AdoService>();
 
         var sp = svc.BuildServiceProvider();
 
