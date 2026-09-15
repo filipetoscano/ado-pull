@@ -9,6 +9,16 @@
     <AssemblyName>adopull</AssemblyName>
   </PropertyGroup>
 
+  <!--
+    Release publishes a single executable: without these, a self-contained
+    publish is a folder of runtime DLLs next to a small apphost, and the
+    apphost alone doesn't run. Native libraries (e_sqlite3) are bundled too.
+  -->
+  <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
+    <PublishSingleFile>true</PublishSingleFile>
+    <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
+  </PropertyGroup>
+
   <ItemGroup>
     <None Remove="Resources\*.sql" />
     <EmbeddedResource Include="Resources\*.sql" />
