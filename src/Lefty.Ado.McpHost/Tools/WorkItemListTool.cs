@@ -8,11 +8,11 @@ namespace Lefty.Ado.McpHost.Tools;
 [McpServerToolType]
 public class WorkItemListTool
 {
-    private readonly AdoService _ado;
+    private readonly IAdoService _ado;
 
 
     /// <summary />
-    public WorkItemListTool( AdoService ado )
+    public WorkItemListTool( IAdoService ado )
     {
         _ado = ado;
     }

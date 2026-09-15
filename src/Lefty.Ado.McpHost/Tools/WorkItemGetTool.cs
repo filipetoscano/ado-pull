@@ -10,11 +10,11 @@ namespace Lefty.Ado.McpHost.Tools;
 [McpServerToolType]
 public class WorkItemGetTool
 {
-    private readonly AdoService _ado;
+    private readonly IAdoService _ado;
 
 
     /// <summary />
-    public WorkItemGetTool( AdoService ado )
+    public WorkItemGetTool( IAdoService ado )
     {
         _ado = ado;
     }

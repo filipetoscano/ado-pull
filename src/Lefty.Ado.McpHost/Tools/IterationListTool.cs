@@ -8,11 +8,11 @@ namespace Lefty.Ado.McpHost.Tools;
 [McpServerToolType]
 public class IterationListTool
 {
-    private readonly AdoService _ado;
+    private readonly IAdoService _ado;
 
 
     /// <summary />
-    public IterationListTool( AdoService ado )
+    public IterationListTool( IAdoService ado )
     {
         _ado = ado;
     }

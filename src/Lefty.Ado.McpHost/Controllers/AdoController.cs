@@ -8,11 +8,11 @@ namespace Lefty.Ado.McpHost.Controllers;
 [ApiController]
 public class AdoController : ControllerBase
 {
-    private readonly AdoService _svc;
+    private readonly IAdoService _svc;
 
 
     /// <summary />
-    public AdoController( AdoService svc )
+    public AdoController( IAdoService svc )
     {
         _svc = svc;
     }
