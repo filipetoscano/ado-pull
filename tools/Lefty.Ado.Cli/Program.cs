@@ -10,6 +10,7 @@ namespace Lefty.Ado.Cli;
 /// <summary />
 [Command( "adopull", Description = "Retrieves/Queries items from Azure DevOps" )]
 [Subcommand( typeof( ExportCommand ) )]
+[Subcommand( typeof( JsonCommand ) )]
 [VersionOptionFromMember( MemberName = nameof( GetVersion ) )]
 public class Program
 {
