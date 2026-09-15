@@ -254,19 +254,39 @@ public partial class AdoService
     }
 
 
-    /// <summary />
+    /// <summary>
+    /// Paginated via $skip/$top, since the updates API exposes no continuation
+    /// token. The documentation states no maximum for $top: this assumes the
+    /// server honours a page size of 200, as a smaller server-side cap would
+    /// end the loop early.
+    /// </summary>
     private async Task<IReadOnlyList<WorkItemTransition>> FetchTransitionsAsync( string project, int id, CancellationToken cancellationToken )
     {
-        var url = $"{Uri.EscapeDataString( project )}/_apis/wit/workitems/{id}/updates?api-version={ApiVersion}";
+        const int pageSize = 200;
+        var updates = new List<WorkItemUpdateDto>();
+        var skip = 0;
 
-        var result = await _http.GetFromJsonAsync<WorkItemUpdatesResultDto>( url, JsonOptions, cancellationToken );
+        while ( true )
+        {
+            var url = $"{Uri.EscapeDataString( project )}/_apis/wit/workitems/{id}/updates"
+                + $"?$skip={skip}&$top={pageSize}&api-version={ApiVersion}";
 
-        if ( result is null )
-            return Array.Empty<WorkItemTransition>();
+            var result = await _http.GetFromJsonAsync<WorkItemUpdatesResultDto>( url, JsonOptions, cancellationToken );
+
+            if ( result is null )
+                break;
+
+            updates.AddRange( result.Value );
+
+            if ( result.Value.Count < pageSize )
+                break;
+
+            skip += pageSize;
+        }
 
         var transitions = new List<WorkItemTransition>();
 
-        foreach ( var update in result.Value )
+        foreach ( var update in updates )
         {
             if ( update.Fields is null || update.RevisedBy is null || update.RevisedDate is null )
                 continue;
@@ -294,17 +314,32 @@ public partial class AdoService
     }
 
 
-    /// <summary />
+    /// <summary>
+    /// Paginated via the continuationToken carried in the response body (not
+    /// the x-ms-continuationtoken header used by the test plan APIs).
+    /// </summary>
     private async Task<IReadOnlyList<WorkItemRemark>> FetchRemarksAsync( string project, int id, CancellationToken cancellationToken )
     {
-        var url = $"{Uri.EscapeDataString( project )}/_apis/wit/workitems/{id}/comments?api-version={CommentsApiVersion}";
+        const int pageSize = 200;
+        var comments = new List<WorkItemCommentDto>();
+        string? continuationToken = null;
 
-        var result = await _http.GetFromJsonAsync<WorkItemCommentsResultDto>( url, JsonOptions, cancellationToken );
+        do
+        {
+            var url = $"{Uri.EscapeDataString( project )}/_apis/wit/workitems/{id}/comments?$top={pageSize}&api-version={CommentsApiVersion}"
+                + ( continuationToken is not null ? $"&continuationToken={Uri.EscapeDataString( continuationToken )}" : "" );
 
-        if ( result is null )
-            return Array.Empty<WorkItemRemark>();
+            var result = await _http.GetFromJsonAsync<WorkItemCommentsResultDto>( url, JsonOptions, cancellationToken );
 
-        return result.Comments
+            if ( result is null )
+                break;
+
+            comments.AddRange( result.Comments );
+            continuationToken = string.IsNullOrEmpty( result.ContinuationToken ) ? null : result.ContinuationToken;
+        }
+        while ( continuationToken is not null );
+
+        return comments
             .Where( c => c.CreatedBy is not null && c.CreatedDate is not null )
             .Select( c => new WorkItemRemark
             {

@@ -87,6 +87,7 @@ internal sealed class WorkItemCommentDto
 internal sealed class WorkItemCommentsResultDto
 {
     public List<WorkItemCommentDto> Comments { get; set; } = new();
+    public string? ContinuationToken { get; set; }
 }
 
 
