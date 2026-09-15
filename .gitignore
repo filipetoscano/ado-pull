@@ -18,5 +18,6 @@ obj/
 src/Lefty.Ado.McpHost/*.cmd
 tools/Lefty.Ado.Cli/*.cmd
 tools/Lefty.Ado.Cli/*.db
+tools/Lefty.Ado.Cli/*.db-journal
 
 # eof

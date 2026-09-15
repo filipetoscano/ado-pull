@@ -10,6 +10,7 @@
     <File Path=".gitignore" />
     <File Path="Claude.md" />
     <File Path="Directory.Build.props" />
+    <File Path="docs/Queries.md" />
     <File Path="global.json" />
     <File Path="README.md" />
   </Folder>
