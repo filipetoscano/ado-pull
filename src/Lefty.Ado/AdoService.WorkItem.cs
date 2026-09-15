@@ -1,5 +1,7 @@
 using Lefty.Ado.Model;
 using System.Net.Http.Json;
+using System.Security.Cryptography;
+using System.Text;
 using System.Text.Json;
 
 namespace Lefty.Ado;
@@ -42,7 +44,7 @@ public partial class AdoService
             items.AddRange( await FetchWorkItemBatchAsync( project, chunk, iterationsByName, cancellationToken ) );
         }
 
-        await FillTransitionsAndRemarksAsync( project, items, cancellationToken );
+        await FillTransitionsAndRemarksAsync( project, items, iterationsByName, cancellationToken );
 
         return items;
     }
@@ -83,7 +85,7 @@ public partial class AdoService
 
         items = items.Where( i => i.MomentActivity >= changedSince ).ToList();
 
-        await FillTransitionsAndRemarksAsync( project, items, cancellationToken );
+        await FillTransitionsAndRemarksAsync( project, items, iterationsByName, cancellationToken );
 
         return items;
     }
@@ -101,11 +103,15 @@ public partial class AdoService
 
 
     /// <summary>
-    /// Transitions and remarks require one extra call per work item (no batch
-    /// API exists for either), so fan them out with bounded concurrency
-    /// rather than one at a time.
+    /// Transitions, iteration changes and remarks require extra calls per work
+    /// item (no batch API exists for any of them), so fan them out with bounded
+    /// concurrency rather than one at a time.
     /// </summary>
-    private async Task FillTransitionsAndRemarksAsync( string project, IReadOnlyList<WorkItem> items, CancellationToken cancellationToken )
+    private async Task FillTransitionsAndRemarksAsync(
+        string project,
+        IReadOnlyList<WorkItem> items,
+        IReadOnlyDictionary<string, Iteration> iterationsByName,
+        CancellationToken cancellationToken )
     {
         using var throttle = new SemaphoreSlim( 8 );
 
@@ -115,7 +121,7 @@ public partial class AdoService
 
             try
             {
-                item.Transitions = await FetchTransitionsAsync( project, item.Id, cancellationToken );
+                (item.Transitions, item.Iterations) = await FetchUpdatesAsync( project, item.Id, iterationsByName, cancellationToken );
                 item.Remarks = await FetchRemarksAsync( project, item.Id, cancellationToken );
             }
             finally
@@ -138,7 +144,7 @@ public partial class AdoService
 
         var item = MapWorkItem( dto, iterationsByName );
 
-        item.Transitions = await FetchTransitionsAsync( project, item.Id, cancellationToken );
+        (item.Transitions, item.Iterations) = await FetchUpdatesAsync( project, item.Id, iterationsByName, cancellationToken );
         item.Remarks = await FetchRemarksAsync( project, item.Id, cancellationToken );
 
         return item;
@@ -214,18 +220,7 @@ public partial class AdoService
     {
         var fields = dto.Fields;
 
-        var iterationPath = GetString( fields, "System.IterationPath" );
-        Iteration? iteration = null;
-
-        if ( iterationPath is not null )
-        {
-            var iterationName = iterationPath.Split( '\\' ).Last();
-
-            iteration = iterationsByName.TryGetValue( iterationName, out var found )
-                ? found
-                : new Iteration { Id = Guid.Empty, Name = iterationName };
-        }
-
+        var iteration = ResolveIteration( GetString( fields, "System.IterationPath" ), iterationsByName );
         var tags = GetString( fields, "System.Tags" );
 
         return new WorkItem
@@ -249,18 +244,58 @@ public partial class AdoService
             Component = GetString( fields, "Custom.Component" ),
             Severity = GetString( fields, "Microsoft.VSTS.Common.Severity" ),
             Transitions = Array.Empty<WorkItemTransition>(),
+            Iterations = Array.Empty<WorkItemIteration>(),
             Remarks = Array.Empty<WorkItemRemark>(),
         };
     }
 
 
     /// <summary>
+    /// Matches an iteration path to a known iteration by its last segment. An
+    /// iteration not found in the lookup -- since renamed or deleted, or the
+    /// project's root iteration -- gets an id derived from its path, so that
+    /// distinct unknown iterations stay distinct, and the same path always
+    /// maps to the same id.
+    /// </summary>
+    private static Iteration? ResolveIteration( string? iterationPath, IReadOnlyDictionary<string, Iteration> iterationsByName )
+    {
+        if ( iterationPath is null )
+            return null;
+
+        var iterationName = iterationPath.Split( '\\' ).Last();
+
+        return iterationsByName.TryGetValue( iterationName, out var found )
+            ? found
+            : new Iteration { Id = IterationIdFromPath( iterationPath ), Name = iterationName };
+    }
+
+
+    /// <summary>
+    /// Deterministic id for an iteration path: the first 16 bytes of the
+    /// SHA-256 of the path, upper-cased since ADO paths are case-insensitive.
+    /// </summary>
+    private static Guid IterationIdFromPath( string iterationPath )
+    {
+        var hash = SHA256.HashData( Encoding.UTF8.GetBytes( iterationPath.ToUpperInvariant() ) );
+
+        return new Guid( hash.AsSpan( 0, 16 ) );
+    }
+
+
+    /// <summary>
+    /// Reads the work item's update history once, extracting both the state
+    /// transitions and the iteration changes.
+    ///
     /// Paginated via $skip/$top, since the updates API exposes no continuation
     /// token. The documentation states no maximum for $top: this assumes the
     /// server honours a page size of 200, as a smaller server-side cap would
     /// end the loop early.
     /// </summary>
-    private async Task<IReadOnlyList<WorkItemTransition>> FetchTransitionsAsync( string project, int id, CancellationToken cancellationToken )
+    private async Task<(IReadOnlyList<WorkItemTransition> Transitions, IReadOnlyList<WorkItemIteration> Iterations)> FetchUpdatesAsync(
+        string project,
+        int id,
+        IReadOnlyDictionary<string, Iteration> iterationsByName,
+        CancellationToken cancellationToken )
     {
         const int pageSize = 200;
         var updates = new List<WorkItemUpdateDto>();
@@ -285,20 +320,17 @@ public partial class AdoService
         }
 
         var transitions = new List<WorkItemTransition>();
+        var iterations = new List<WorkItemIteration>();
 
         foreach ( var update in updates )
         {
             if ( update.Fields is null || update.RevisedBy is null )
                 continue;
 
-            if ( !update.Fields.TryGetValue( "System.State", out var change ) )
-                continue;
+            var stateChange = update.Fields.GetValueOrDefault( "System.State" );
+            var iterationChange = update.Fields.GetValueOrDefault( "System.IterationPath" );
 
-            // A missing 'from' means this update is the work item's creation: kept, so the initial state is recorded.
-            var from = change.OldValue is { ValueKind: JsonValueKind.String } ov ? ov.GetString() : null;
-            var to = change.NewValue is { ValueKind: JsonValueKind.String } nv ? nv.GetString() : null;
-
-            if ( to is null )
+            if ( stateChange is null && iterationChange is null )
                 continue;
 
             /*
@@ -306,8 +338,7 @@ public partial class AdoService
              * next one, not when the change was made; System.ChangedDate holds the
              * latter. Only fall back to revisedDate if the field is absent.
              */
-            var moment = update.Fields.TryGetValue( "System.ChangedDate", out var changed )
-                && changed.NewValue is { ValueKind: JsonValueKind.String } cd
+            var moment = update.Fields.GetValueOrDefault( "System.ChangedDate" )?.NewValue is { ValueKind: JsonValueKind.String } cd
                 && cd.TryGetDateTimeOffset( out var changedDate )
                     ? changedDate
                     : update.RevisedDate;
@@ -315,16 +346,39 @@ public partial class AdoService
             if ( moment is null )
                 continue;
 
-            transitions.Add( new WorkItemTransition
+            var by = new User { Id = update.RevisedBy.Id, DisplayName = update.RevisedBy.DisplayName ?? "", Upn = update.RevisedBy.UniqueName ?? "" };
+
+            // A missing old value means this update is the work item's creation: kept, so the initial value is recorded.
+            if ( stateChange is not null && GetString( stateChange.NewValue ) is { } to )
             {
-                From = from,
-                To = to,
-                By = new User { Id = update.RevisedBy.Id, DisplayName = update.RevisedBy.DisplayName ?? "", Upn = update.RevisedBy.UniqueName ?? "" },
-                Moment = moment.Value.UtcDateTime,
-            } );
+                transitions.Add( new WorkItemTransition
+                {
+                    From = GetString( stateChange.OldValue ),
+                    To = to,
+                    By = by,
+                    Moment = moment.Value.UtcDateTime,
+                } );
+            }
+
+            if ( iterationChange is not null )
+            {
+                var fromPath = GetString( iterationChange.OldValue );
+                var toPath = GetString( iterationChange.NewValue );
+
+                if ( fromPath is not null || toPath is not null )
+                {
+                    iterations.Add( new WorkItemIteration
+                    {
+                        From = ResolveIteration( fromPath, iterationsByName ),
+                        To = ResolveIteration( toPath, iterationsByName ),
+                        By = by,
+                        Moment = moment.Value.UtcDateTime,
+                    } );
+                }
+            }
         }
 
-        return transitions;
+        return (transitions, iterations);
     }
 
 
@@ -369,6 +423,15 @@ public partial class AdoService
     private static string? GetString( Dictionary<string, JsonElement> fields, string name )
     {
         return fields.TryGetValue( name, out var el ) && el.ValueKind == JsonValueKind.String
+            ? el.GetString()
+            : null;
+    }
+
+
+    /// <summary />
+    private static string? GetString( JsonElement? value )
+    {
+        return value is { ValueKind: JsonValueKind.String } el
             ? el.GetString()
             : null;
     }

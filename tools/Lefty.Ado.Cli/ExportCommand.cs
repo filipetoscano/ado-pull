@@ -63,7 +63,8 @@ public class ExportCommand
         using var transaction = connection.BeginTransaction();
 
         var iterations = items
-            .Select( i => i.Iteration )
+            .SelectMany( i => new[] { i.Iteration }
+                .Concat( i.Iterations.SelectMany( c => new[] { c.From, c.To } ) ) )
             .Where( i => i is not null )
             .Select( i => i! )
             .GroupBy( i => i.Id )
@@ -72,6 +73,7 @@ public class ExportCommand
         var users = items
             .SelectMany( i => new[] { i.CreatedBy, i.AssignedTo }
                 .Concat( i.Transitions.Select( t => t.By ) )
+                .Concat( i.Iterations.Select( c => c.By ) )
                 .Concat( i.Remarks.Select( r => r.By ) ) )
             .Where( u => u is not null )
             .Select( u => u! )
@@ -84,6 +86,7 @@ public class ExportCommand
             InsertUsers( connection, transaction, users );
             InsertWorkItems( connection, transaction, items );
             InsertWorkItemRemarks( connection, transaction, items );
+            InsertWorkItemIterations( connection, transaction, items );
             InsertWorkItemTransitions( connection, transaction, items );
 
             transaction.Commit();
@@ -229,6 +232,35 @@ public class ExportCommand
                 text.Value = remark.Text;
                 byUserId.Value = remark.By.Id.ToString();
                 moment.Value = remark.Moment;
+
+                cmd.ExecuteNonQuery();
+            }
+        }
+    }
+
+
+    /// <summary />
+    private static void InsertWorkItemIterations( SqliteConnection connection, SqliteTransaction transaction, IReadOnlyList<WorkItem> items )
+    {
+        using var cmd = connection.CreateCommand();
+        cmd.Transaction = transaction;
+        cmd.CommandText = "insert into WorkItemIterations (ItemId, FromIterationId, ToIterationId, ByUserId, Moment) values ($ItemId, $FromIterationId, $ToIterationId, $ByUserId, $Moment)";
+
+        var itemId = cmd.CreateParameter(); itemId.ParameterName = "$ItemId"; cmd.Parameters.Add( itemId );
+        var fromIterationId = cmd.CreateParameter(); fromIterationId.ParameterName = "$FromIterationId"; cmd.Parameters.Add( fromIterationId );
+        var toIterationId = cmd.CreateParameter(); toIterationId.ParameterName = "$ToIterationId"; cmd.Parameters.Add( toIterationId );
+        var byUserId = cmd.CreateParameter(); byUserId.ParameterName = "$ByUserId"; cmd.Parameters.Add( byUserId );
+        var moment = cmd.CreateParameter(); moment.ParameterName = "$Moment"; cmd.Parameters.Add( moment );
+
+        foreach ( var item in items )
+        {
+            foreach ( var iterationEntry in item.Iterations )
+            {
+                itemId.Value = item.Id;
+                fromIterationId.Value = iterationEntry.From is { } f ? f.Id.ToString() : DBNull.Value;
+                toIterationId.Value = iterationEntry.To is { } t ? t.Id.ToString() : DBNull.Value;
+                byUserId.Value = iterationEntry.By.Id.ToString();
+                moment.Value = iterationEntry.Moment;
 
                 cmd.ExecuteNonQuery();
             }

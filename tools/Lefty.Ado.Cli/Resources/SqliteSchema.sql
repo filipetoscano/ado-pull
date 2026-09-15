@@ -43,6 +43,15 @@ create table if not exists WorkItemRemarks
     Moment datetime not null
 );
 
+create table if not exists WorkItemIterations
+(
+    ItemId integer not null references WorkItems (Id),
+    FromIterationId text null references Iterations (Id),
+    ToIterationId text null references Iterations (Id),
+    ByUserId text not null references AppUsers (Id),
+    Moment datetime not null
+);
+
 create table if not exists WorkItemTransitions
 (
     ItemId integer not null references WorkItems (Id),

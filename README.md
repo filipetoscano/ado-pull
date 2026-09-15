@@ -74,6 +74,15 @@ CREATE TABLE WorkItemRemarks
     Moment datetime not null                                 -- Moment when remark was added
 );
 
+CREATE TABLE WorkItemIterations
+(
+    ItemId integer not null references WorkItems (Id),       -- Item identifier
+    FromIterationId text null references Iterations (Id),    -- From iteration (null on creation)
+    ToIterationId text null references Iterations (Id),      -- To iteration (null if cleared)
+    ByUserId text not null references AppUsers (Id),         -- User who made change
+    Moment datetime not null                                 -- Moment when iteration was changed
+);
+
 CREATE TABLE WorkItemTransitions
 (
     ItemId integer not null references WorkItems (Id),       -- Item identifier

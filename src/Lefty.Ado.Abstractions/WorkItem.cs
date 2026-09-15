@@ -48,5 +48,8 @@ public record WorkItem
     public required IReadOnlyList<WorkItemTransition> Transitions { get; set; }
 
     /// <summary />
+    public required IReadOnlyList<WorkItemIteration> Iterations { get; set; }
+
+    /// <summary />
     public required IReadOnlyList<WorkItemRemark> Remarks { get; set; }
 }
