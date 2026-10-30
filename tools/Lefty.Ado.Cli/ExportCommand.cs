@@ -172,9 +172,9 @@ public class ExportCommand
         cmd.Transaction = transaction;
         cmd.CommandText = """
             insert into WorkItems
-                (Id, Title, Description, State, CreatedByUserId, MomentCreated, MomentActivity, AssignedToUserId, Tags, IterationId, IssueType, Component, Severity)
+                (Id, Title, Description, State, CreatedByUserId, MomentCreated, MomentActivity, AssignedToUserId, Tags, IterationId, IssueType, Component, Severity, Priority)
             values
-                ($Id, $Title, $Description, $State, $CreatedByUserId, $MomentCreated, $MomentActivity, $AssignedToUserId, $Tags, $IterationId, $IssueType, $Component, $Severity)
+                ($Id, $Title, $Description, $State, $CreatedByUserId, $MomentCreated, $MomentActivity, $AssignedToUserId, $Tags, $IterationId, $IssueType, $Component, $Severity, $Priority)
             """;
 
         var id = cmd.CreateParameter(); id.ParameterName = "$Id"; cmd.Parameters.Add( id );
@@ -190,6 +190,7 @@ public class ExportCommand
         var issueType = cmd.CreateParameter(); issueType.ParameterName = "$IssueType"; cmd.Parameters.Add( issueType );
         var component = cmd.CreateParameter(); component.ParameterName = "$Component"; cmd.Parameters.Add( component );
         var severity = cmd.CreateParameter(); severity.ParameterName = "$Severity"; cmd.Parameters.Add( severity );
+        var priority = cmd.CreateParameter(); priority.ParameterName = "$Priority"; cmd.Parameters.Add( priority );
 
         foreach ( var item in items )
         {
@@ -206,6 +207,7 @@ public class ExportCommand
             issueType.Value = (object?) item.IssueType ?? DBNull.Value;
             component.Value = (object?) item.Component ?? DBNull.Value;
             severity.Value = (object?) item.Severity ?? DBNull.Value;
+            priority.Value = (object?) item.Priority ?? DBNull.Value;
 
             cmd.ExecuteNonQuery();
         }

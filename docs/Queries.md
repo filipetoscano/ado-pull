@@ -23,8 +23,6 @@ select
     sum(case when w.State = 'Fixed on Dev'      then 1 else 0 end) as [Fixed on Dev],
     sum(case when w.State = 'Reopened'          then 1 else 0 end) as [Reopened],
     sum(case when w.State = 'Ready on UAT'      then 1 else 0 end) as [Ready on UAT],
-    sum(case when w.State = 'On Hold'           then 1 else 0 end) as [On Hold],
-    sum(case when w.State = 'Deferred'          then 1 else 0 end) as [Deferred],
     sum(case when w.State = 'Done'              then 1 else 0 end) as [Done],
     sum(case when w.State = 'Cancelled'         then 1 else 0 end) as [Cancelled],
     count(*)                                                    as Total

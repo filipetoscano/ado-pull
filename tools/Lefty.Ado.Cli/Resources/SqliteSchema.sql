@@ -32,6 +32,7 @@ create table if not exists WorkItems
     IterationId text null references Iterations (Id),
     IssueType text null,
     Component text null,
+    Priority integer null,
     Severity text null
 );
 

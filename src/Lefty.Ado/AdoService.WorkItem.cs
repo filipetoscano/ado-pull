@@ -22,6 +22,7 @@ public partial class AdoService
         "System.Tags",
         "System.IterationPath",
         "Microsoft.VSTS.Common.Severity",
+        "Microsoft.VSTS.Common.Priority",
         "Custom.Component",
         "Custom.IssueType",
     };
@@ -243,6 +244,7 @@ public partial class AdoService
             IssueType = GetString( fields, "Custom.IssueType" ),
             Component = GetString( fields, "Custom.Component" ),
             Severity = GetString( fields, "Microsoft.VSTS.Common.Severity" ),
+            Priority = GetInt( fields, "Microsoft.VSTS.Common.Priority" ),
             Transitions = Array.Empty<WorkItemTransition>(),
             Iterations = Array.Empty<WorkItemIteration>(),
             Remarks = Array.Empty<WorkItemRemark>(),
@@ -433,6 +435,15 @@ public partial class AdoService
     {
         return value is { ValueKind: JsonValueKind.String } el
             ? el.GetString()
+            : null;
+    }
+
+
+    /// <summary />
+    private static int? GetInt( Dictionary<string, JsonElement> fields, string name )
+    {
+        return fields.TryGetValue( name, out var el ) && el.ValueKind == JsonValueKind.Number && el.TryGetInt32( out var value )
+            ? value
             : null;
     }
 

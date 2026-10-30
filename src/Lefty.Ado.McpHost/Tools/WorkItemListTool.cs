@@ -30,16 +30,17 @@ public class WorkItemListTool
          *
          */
         var sb = new StringBuilder();
-        sb.AppendLine( "| Id | Title | Type | State | Assigned To | Iteration |" );
-        sb.AppendLine( "|----|-------|------|-------|-------------|-----------|" );
+        sb.AppendLine( "| Id | Title | Type | State | Priority | Assigned To | Iteration |" );
+        sb.AppendLine( "|----|-------|------|-------|----------|-------------|-----------|" );
 
         foreach ( var wi in workItems.OrderBy( x => x.Id ) )
         {
-            sb.AppendFormat( "| {0} | {1} | {2} | {3} | {4} | {5} |",
+            sb.AppendFormat( "| {0} | {1} | {2} | {3} | {4} | {5} | {6} |",
                 wi.Id,
                 wi.Title,
                 wi.IssueType,
                 wi.State,
+                wi.Priority,
                 wi.AssignedTo?.DisplayName ?? "",
                 wi.Iteration?.Name ?? "" );
 

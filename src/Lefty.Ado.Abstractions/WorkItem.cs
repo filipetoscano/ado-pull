@@ -43,6 +43,11 @@ public record WorkItem
     /// <summary />
     public required string? Severity { get; set; }
 
+    /// <summary>
+    /// Priority, from 1 (highest) to 4 (lowest).
+    /// </summary>
+    public required int? Priority { get; set; }
+
 
     /// <summary />
     public required IReadOnlyList<WorkItemTransition> Transitions { get; set; }

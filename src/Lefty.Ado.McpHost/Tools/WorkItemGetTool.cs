@@ -45,6 +45,7 @@ public class WorkItemGetTool
         sb.AppendLine();
         sb.AppendLine( $"- Type: {wi.IssueType}" );
         sb.AppendLine( $"- State: {wi.State}" );
+        sb.AppendLine( $"- Priority: {wi.Priority}" );
         sb.AppendLine( $"- Assigned To: {wi.AssignedTo?.DisplayName ?? ""}" );
         sb.AppendLine( $"- Iteration: {wi.Iteration?.Name ?? ""}" );
         sb.AppendLine( $"- Created By: {wi.CreatedBy.DisplayName} ({wi.MomentCreated:yyyy-MM-dd})" );

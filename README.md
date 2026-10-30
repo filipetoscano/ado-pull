@@ -63,6 +63,7 @@ CREATE TABLE WorkItems
     IterationId text null references Iterations (Id),        -- Iteration
     IssueType text null,                                     -- Type of issue
     Component text null,                                     -- Component / Area
+    Priority integer null,                                   -- Priority: 1 (highest) to 4 (lowest)
     Severity text null                                       -- Severity
 );
 
